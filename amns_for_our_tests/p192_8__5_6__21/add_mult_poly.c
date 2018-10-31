@@ -1,0 +1,85 @@
+#include "add_mult_poly.h"
+
+
+void add_poly(int64_t *rop, int64_t *pa, int64_t *pb){
+	int j;
+	for (j=0; j<NB_COEFF; j++)
+		rop[j] = pa[j] + pb[j];
+}
+
+void sub_poly(int64_t *rop, int64_t *pa, int64_t *pb){
+	int j;
+	for (j=0; j<NB_COEFF; j++)
+		rop[j] = pa[j] - pb[j];
+}
+
+void neg_poly(int64_t *rop, int64_t *op){
+	int j;
+	for (j=0; j<NB_COEFF; j++)
+		rop[j] = -op[j];
+}
+
+//~ assumes 'scalar' and/or coeffs of 'op' small enough to avoid an overflow.
+void scalar_mult_poly(int64_t *rop, int64_t *op, int64_t scalar){
+	int j;
+	for (j=0; j<NB_COEFF; j++)
+		rop[j] = scalar * op[j];
+}
+
+//~ Computes pa(X)*pb(X) mod(X^n - c)
+void mult_mod_poly(int64_t *rop, int64_t *pa, int64_t *pb){
+
+	int128 tmp_prod_result[NB_COEFF];
+
+	tmp_prod_result[0] = (int128)pa[0] * pb[0] + (((int128)pa[1] * pb[4] + (int128)pa[2] * pb[3] + (int128)pa[3] * pb[2] + (int128)pa[4] * pb[1]) * 6);
+	tmp_prod_result[1] = (int128)pa[0] * pb[1] + (int128)pa[1] * pb[0] + (((int128)pa[2] * pb[4] + (int128)pa[3] * pb[3] + (int128)pa[4] * pb[2]) * 6);
+	tmp_prod_result[2] = (int128)pa[0] * pb[2] + (int128)pa[1] * pb[1] + (int128)pa[2] * pb[0] + (((int128)pa[3] * pb[4] + (int128)pa[4] * pb[3]) * 6);
+	tmp_prod_result[3] = (int128)pa[0] * pb[3] + (int128)pa[1] * pb[2] + (int128)pa[2] * pb[1] + (int128)pa[3] * pb[0] + (((int128)pa[4] * pb[4]) * 6);
+	tmp_prod_result[4] = (int128)pa[0] * pb[4] + (int128)pa[1] * pb[3] + (int128)pa[2] * pb[2] + (int128)pa[3] * pb[1] + (int128)pa[4] * pb[0];
+
+	internal_reduction(rop, tmp_prod_result);
+}
+
+//~ Computes pa(X)^2 mod(X^n - c)
+void square_mod_poly(int64_t *rop, int64_t *pa){
+
+	int128 tmp_prod_result[NB_COEFF];
+
+	tmp_prod_result[0] = (int128)pa[0] * pa[0] + (((int128)pa[3] * pa[2] + (int128)pa[4] * pa[1]) * 12);
+	tmp_prod_result[1] = (((int128)pa[1] * pa[0]) << 1) + (((((int128)pa[4] * pa[2]) << 1) + (int128)pa[3] * pa[3]) * 6);
+	tmp_prod_result[2] = (((int128)pa[2] * pa[0]) << 1) + (int128)pa[1] * pa[1] + (((int128)pa[4] * pa[3]) * 12);
+	tmp_prod_result[3] = (((int128)pa[2] * pa[1] + (int128)pa[3] * pa[0]) << 1) + (((int128)pa[4] * pa[4]) * 6);
+	tmp_prod_result[4] = (((int128)pa[3] * pa[1] + (int128)pa[4] * pa[0]) << 1) + (int128)pa[2] * pa[2];
+
+	internal_reduction(rop, tmp_prod_result);
+}
+
+//~ performs the internal reduction on 'op' and puts the result in 'rop'
+//~ IMPORTANT : We take 'mont_phi = 1 << WORD_SIZE', so operations modulo mont_phi are automatically done using the appropriate variable type.
+void internal_reduction(int64_t *rop, int128 *op){
+
+	uint64_t tmp_q[NB_COEFF];
+	int128 tmp_zero[NB_COEFF];
+
+	//~ computation of : op*neg_inv_ri_rep_coeff mod((X^n - c), mont_phi)
+	tmp_q[0] = ((uint64_t)op[0] * 17849748566180285129UL) + ((((uint64_t)op[1] * 7285717081712574360UL) + ((uint64_t)op[2] * 8978168928692217649UL) + ((uint64_t)op[3] * 17578372640479185319UL) + ((uint64_t)op[4] * 1174313490167171976UL)) * 6);
+	tmp_q[1] = ((uint64_t)op[0] * 1174313490167171976UL) + ((uint64_t)op[1] * 17849748566180285129UL) + ((((uint64_t)op[2] * 7285717081712574360UL) + ((uint64_t)op[3] * 8978168928692217649UL) + ((uint64_t)op[4] * 17578372640479185319UL)) * 6);
+	tmp_q[2] = ((uint64_t)op[0] * 17578372640479185319UL) + ((uint64_t)op[1] * 1174313490167171976UL) + ((uint64_t)op[2] * 17849748566180285129UL) + ((((uint64_t)op[3] * 7285717081712574360UL) + ((uint64_t)op[4] * 8978168928692217649UL)) * 6);
+	tmp_q[3] = ((uint64_t)op[0] * 8978168928692217649UL) + ((uint64_t)op[1] * 17578372640479185319UL) + ((uint64_t)op[2] * 1174313490167171976UL) + ((uint64_t)op[3] * 17849748566180285129UL) + ((uint64_t)op[4] * 6820814342856342928UL);
+	tmp_q[4] = ((uint64_t)op[0] * 7285717081712574360UL) + ((uint64_t)op[1] * 8978168928692217649UL) + ((uint64_t)op[2] * 17578372640479185319UL) + ((uint64_t)op[3] * 1174313490167171976UL) + ((uint64_t)op[4] * 17849748566180285129UL);
+
+	//~ computation of : tmp_q*red_int_coeff mod(X^n - c)
+	tmp_zero[0] = -((int128)tmp_q[0] * 122829470073L) + ((-((int128)tmp_q[1] * 140453849527L) - ((int128)tmp_q[2] * 190060932383L) - ((int128)tmp_q[3] * 158459859967L) + ((int128)tmp_q[4] * 90544868568L)) * 6);
+	tmp_zero[1] = ((int128)tmp_q[0] * 90544868568L) - ((int128)tmp_q[1] * 122829470073L) + ((-((int128)tmp_q[2] * 140453849527L) - ((int128)tmp_q[3] * 190060932383L) - ((int128)tmp_q[4] * 158459859967L)) * 6);
+	tmp_zero[2] = -((int128)tmp_q[0] * 158459859967L) + ((int128)tmp_q[1] * 90544868568L) - ((int128)tmp_q[2] * 122829470073L) + ((-((int128)tmp_q[3] * 140453849527L) - ((int128)tmp_q[4] * 190060932383L)) * 6);
+	tmp_zero[3] = -((int128)tmp_q[0] * 190060932383L) - ((int128)tmp_q[1] * 158459859967L) + ((int128)tmp_q[2] * 90544868568L) - ((int128)tmp_q[3] * 122829470073L) - ((int128)tmp_q[4] * 842723097162L);
+	tmp_zero[4] = -((int128)tmp_q[0] * 140453849527L) - ((int128)tmp_q[1] * 190060932383L) - ((int128)tmp_q[2] * 158459859967L) + ((int128)tmp_q[3] * 90544868568L) - ((int128)tmp_q[4] * 122829470073L);
+
+	//~ computation of : (op + tmp_zero)/mont_phi
+	rop[0] = (op[0] + tmp_zero[0]) >> WORD_SIZE;
+	rop[1] = (op[1] + tmp_zero[1]) >> WORD_SIZE;
+	rop[2] = (op[2] + tmp_zero[2]) >> WORD_SIZE;
+	rop[3] = (op[3] + tmp_zero[3]) >> WORD_SIZE;
+	rop[4] = (op[4] + tmp_zero[4]) >> WORD_SIZE;
+}
+
