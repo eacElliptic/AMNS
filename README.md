@@ -1,6 +1,6 @@
 # AMNS
 This repository contains codes to generate Adapted Modular Number Systems (AMNS) for a given prime.
-It also contains a C code generator for arithmetic (and conversion) operations using AMNS.  
+It also contains a C code generator for arithmetic (and conversion) operations using AMNS.
 
 
 The subdirectory 'amns_generator' contains codes to generate AMNS given a prime and some parameters; see an example in file 'gen_example.py' of this subdirectory.
@@ -11,7 +11,9 @@ The generated code will be in the subdirectory 'c_codes' of this subdirectory an
 
 
 The subdirectory 'amns_for_our_tests' contains the C codes of the AMNS we used to build the tables of performances in the article.
+In this subdirectory, files are named as follow : 'p'+pBitSize_num1__n_lambda__num2; n and lambda are some parameters of the AMNS. num1 and num2 are irrelevant numbers we used to distinguish AMNS in the generation process.
 Notice that in each subdirectory of this subdirectory, there is a file 'timing.txt' which contains results we used to build the tables of performances in the article.
+Also, this subdirectory contains more than 1600 AMNS, so GitHub will not show all of them. Therefore, you should download the subdirectory to see all these AMNS.
 
 
 The subdirectory 'nist_prime_p521' contains AMNS c code for the recommended NIST prime 'p = 2^521 - 1' for elliptic curve cryptography. The file 'timing.txt' contains results we presented in the article.
