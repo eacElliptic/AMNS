@@ -3,6 +3,11 @@ This repository contains codes to generate Adapted Modular Number Systems (AMNS)
 It also contains a C code generator for arithmetic (and conversion) operations using AMNS.
 
 
+
+WARNING: this repository is NOT UP TO DATE, please go to: https://github.com/arithPMNS/generalisation_amns
+
+
+
 The subdirectory 'amns_generator' contains codes to generate AMNS given a prime and some parameters; see an example in file 'gen_example.py' of this subdirectory.
 
 
