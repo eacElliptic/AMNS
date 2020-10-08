@@ -1,10 +1,14 @@
 # AMNS
-This repository contains codes to generate Adapted Modular Number Systems (AMNS) for a given prime.
-It also contains a C code generator for arithmetic (and conversion) operations using AMNS.
 
 
 
 WARNING: this repository is NOT UP TO DATE, please go to: https://github.com/arithPMNS/generalisation_amns
+
+
+
+This repository contains codes to generate Adapted Modular Number Systems (AMNS) for a given prime.
+It also contains a C code generator for arithmetic (and conversion) operations using AMNS.
+
 
 
 
